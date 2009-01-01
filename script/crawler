@@ -1,0 +1,22 @@
+#!/usr/bin/ruby -Ku
+
+BASE_PATH = File.join File.dirname(__FILE__), '../'
+LOG_PATH  = File.join BASE_PATH, 'log/crawler.log'
+
+require 'lib/crawler'
+
+mode = ARGV.shift
+if mode=='debug'
+  logger = Logger.new STDOUT
+else
+  logger = Logger.new LOG_PATH, 'daily'
+end
+
+begin
+  crawler = Haccho::Crawler.new
+  crawler.logger = logger
+  crawler.start
+rescue => e
+  logger.error e.message + ' : ' + e.backtrace.join("\n")
+end
+

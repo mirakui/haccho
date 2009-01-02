@@ -6,8 +6,8 @@ require 'kconv'
 require 'gena/file_db'
 
 module Haccho
-  DL_COUNT_MAX     = 500
-  PAGE_COUNT_MAX   = 10
+  DL_COUNT_MAX     = $DEBUG ? 50 : 100_000
+  PAGE_COUNT_MAX   = $DEBUG ? 1  :   3_000
   DMM_URI_BASE     = 'http://www.dmm.co.jp/rental/-/'
   BASE_DIR         = File.join File.dirname(__FILE__), '../'
   CACHE_DIR        = File.join BASE_DIR,   'cache'
@@ -18,16 +18,17 @@ module Haccho
 
   class Crawler
     def initialize
-      @agent       = WWW::Mechanize.new
+      @agent          = WWW::Mechanize.new
       #WWW::Mechanize.html_parser = Hpricot
-      @log           = Logger.new STDOUT
-      @log.level     = Logger::DEBUG
-      @dl_file       = Gena::FileDB.new DL_YAML_PATH
-      @config_file   = Gena::FileDB.new CONFIG_YAML_PATH
-      @config        = @config_file.read_yaml || {}
-      @blacklist     = @config['blacklist'] || []
-      @last_cid_file = Gena::FileDB.new LAST_CID_PATH
-      @last_cid      = @last_cid_file.read
+      @log            = Logger.new STDOUT
+      @log.level      = Logger::DEBUG
+      @dl_file        = Gena::FileDB.new DL_YAML_PATH
+      @config_file    = Gena::FileDB.new CONFIG_YAML_PATH
+      @config         = @config_file.read_yaml || {}
+      @blacklist      = @config['blacklist'] || []
+      @last_cid_file  = Gena::FileDB.new LAST_CID_PATH
+      @last_cid       = @last_cid_file.read
+      @last_cid_wrote = false
     end
 
     def logger=(logger)
@@ -80,7 +81,8 @@ private
         crawled = crawl_cid(cid)
         if crawled
           @crawled << crawled
-          @last_cid_file.write cid
+          @last_cid_file.write(cid) unless @last_cid_wrote
+          @last_cid_wrote = true
         end
       end
       return true

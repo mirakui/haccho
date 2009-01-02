@@ -5,8 +5,7 @@ LOG_PATH  = File.join BASE_PATH, 'log/crawler.log'
 
 require 'lib/crawler'
 
-mode = ARGV.shift
-if mode=='debug'
+if $DEBUG
   logger = Logger.new STDOUT
 else
   logger = Logger.new LOG_PATH, 'daily'

@@ -16,30 +16,32 @@ $movies_page_index = ($page-1) * MOVIES_PER_PAGE;
 * {line-height: 1em;}
 h2 {font-size:10pt; display:inline;}
 .keywords {font-size:8pt; display:inline;}
-.title {margin-top:10px;}
+.entry-title {margin-top:10px;}
 </style>
 </head>
 <body>
 <h1>haccho</h1>
 <div class="section">
-<? for ($i=0; $i<MOVIES_PER_PAGE && ($i+kmovies_page_index)<count($movies); $i++) { ?>
+<? for ($i=0; $i<MOVIES_PER_PAGE && ($i+$movies_page_index)<count($movies); $i++) { ?>
   <? $m = $movies[$i + $movies_page_index] ?>
-  <div class="subsection">
-    <div class="title">
+  <div class="hentry">
+    <div class="entry-title">
       <h2><?= $m['title'] ?></h2>
       <? $keywords = join($m['keywords'], ', ') ?>
       <p class="keywords"><?= $keywords ?></p>
     </div>
-    <div class="image_box">
-      <a href="<?= $m['uri'] ?>"><img src="cache/<?= $m['package_image'] ?>"/></a>
-    </div>
-    <? if ($m['thumb_images']) { ?>
-      <div class="thumb_box">
-      <? foreach ($m['thumb_images'] as $th) { ?>
-        <img src="cache/<?= $th ?>"/>
-      <? } ?>
+    <div class="entry-content">
+      <div class="image-box">
+        <a href="<?= $m['uri'] ?>" rel="bookmark"><img src="cache/<?= $m['package_image'] ?>"/></a>
       </div>
-    <? } ?>
+      <? if ($m['thumb_images']) { ?>
+        <div class="thumb-box">
+        <? foreach ($m['thumb_images'] as $th) { ?>
+          <img src="cache/<?= $th ?>"/>
+        <? } ?>
+        </div>
+      <? } ?>
+    </div>
   </div>
 <? } ?>
 </div>

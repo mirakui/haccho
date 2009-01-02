@@ -29,6 +29,7 @@ module Haccho
       @last_cid_file  = Gena::FileDB.new LAST_CID_PATH
       @last_cid       = @last_cid_file.read
       @last_cid_wrote = false
+      @rolled         = false
     end
 
     def logger=(logger)
@@ -38,7 +39,6 @@ module Haccho
     def start
       @log.info 'Crawler started'
       @crawled = []
-      @dl_file.roll :daily
       num = 1
       loop do
         if num > PAGE_COUNT_MAX
@@ -47,6 +47,10 @@ module Haccho
         end
         cids = crawl_list(num)
         crawl_cids(cids) or break
+        unless @rolled
+          @dl_file.roll :daily
+          @rolled = true
+        end
         @dl_file.write @crawled.to_yaml
         @log.info "Wrote: #{@dl_file.path}"
         num += 1

@@ -1,5 +1,4 @@
 <?php
-require_once 'spyc.php5';
 define('MOVIES_PER_PAGE', 20);
 $movies = syck_load(file_get_contents('cache/downloaded.yml'));
 $page = $_GET['page'];

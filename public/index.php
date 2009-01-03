@@ -5,15 +5,20 @@ $pit = $pit['haccho_mysql'];
 $dsn = 'mysql:host=localhost;port=3306;dbname=haccho';
 $db = new PDO($dsn, $pit['username'], $pit['password']);
 
+$st = $db->prepare('SELECT count(*) as count FROM entries');
+$st->execute();
+$res = $st->fetchAll();
+$movies_count = $res[0]['count'];
+
 $page = $_GET['page'];
-$page_count = ceil(count($movies) / MOVIES_PER_PAGE);
+$page_count = ceil($movies_count / MOVIES_PER_PAGE);
 if (!($page>=1 && $page<=$page_count)) {
   $page = 1;
 }
 $movies_page_index = ($page-1) * MOVIES_PER_PAGE;
 
-$st     = $db->prepare('SELECT * FROM entries LIMIT '.$movies_page_index.', '.MOVIES_PER_PAGE);
-$res    = $st->execute();
+$st = $db->prepare('SELECT * FROM entries LIMIT '.$movies_page_index.', '.MOVIES_PER_PAGE);
+$st->execute();
 $movies = $st->fetchAll();
 
 ?>
@@ -30,9 +35,9 @@ h2 {font-size:10pt; display:inline;}
 <body>
 <h1>haccho</h1>
 <div class="section">
-<? for ($i=0; $i<MOVIES_PER_PAGE && ($i+$movies_page_index)<count($movies); $i++) { ?>
+<? for ($i=0; $i<count($movies); $i++) { ?>
   <?
-    $m = $movies[$i + $movies_page_index];
+    $m = $movies[$i];
     $cid = $m['cid'];
     $pre = substr($cid, 0, 3);
     $package_image = "cache/$pre/$cid.jpg";

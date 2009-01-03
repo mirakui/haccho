@@ -8,6 +8,7 @@ require 'gena/file_db'
 module Haccho
   DL_COUNT_MAX     = $DEBUG ? 50 : 100_000
   PAGE_COUNT_MAX   = $DEBUG ? 1  :   3_000
+  RETRY_MAX        = 3
   DMM_URI_BASE     = 'http://www.dmm.co.jp/rental/-/'
   BASE_DIR         = File.join File.dirname(__FILE__), '../'
   CACHE_DIR        = File.join BASE_DIR,   'cache'
@@ -93,12 +94,30 @@ private
     end
 
     def crawl_cid(cid)
-      result = {}
-      page = get "detail/=/cid=#{cid}/"
-      result['cid'] = cid
-      result['uri'] = page.uri.to_s
-      result['title'] = page.title.match(/^[^\[]+\[(.+)\][^\]]+$/)[1]
-      result['keywords'] = []
+      result = nil
+      begin
+        result = {}
+        page = get "detail/=/cid=#{cid}/"
+        result['cid']           = cid
+        result['uri']           = page.uri.to_s
+        result['title']         = extract_title page
+        result['keywords']      = extract_keywords page, cid
+        result['thumb_images']  = extract_thumb_images page
+        result['description']   = extract_description page
+        result['package_image'] = extract_package_image page, cid
+        @log.info "Crawled: [#{cid}] #{result['title']}"
+      rescue => e
+        @log.warn "Skipped: [#{cid}] exception raised: "+ e.message + ' : ' + e.backtrace.join("\n")
+      end
+      result
+    end
+
+    def extract_title(page)
+      page.title.match(/^[^\[]+\[(.+)\][^\]]+$/)[1]
+    end
+
+    def extract_keywords(page, cid)
+      keywords = []
       (page / 'table.mg-b20 a').each do |a|
         if a['href']=~/keyword/
           keyword = a.text
@@ -106,24 +125,33 @@ private
             @log.info "Blacklisted(#{keyword}): [#{cid}] #{result['title']}"
             return nil
           else
-            result['keywords'] << keyword
+            keywords << keyword
           end
         end
       end
+      keywords
+    end
+
+    def extract_thumb_images(page)
+      thumb_images = nil
       (page / 'img').each do |img|
         src = img['src']
-        cid_short = cid.split(/[a-z]+$/i).join
-        if src=~/#{cid_short}/ && !(src=~/ps.jpg/)
+        if src=~/-\d+\.jpg$/
           filename = download_image src
-          result['thumb_images'] ||= []
-          result['thumb_images'] << filename
+          thumb_images ||= []
+          thumb_images << filename
         end
       end
-      result['description'] = (page / 'div.clear.lh4').text
+      thumb_images
+    end
+
+    def extract_description(page)
+      description = (page / 'div.clear.lh4').text
+    end
+
+    def extract_package_image(page, cid)
       uri = "http://pics.dmm.co.jp/mono/movie/#{cid}/#{cid}pl.jpg"
-      result['package_image'] = download_image uri
-      @log.info "Crawled: [#{cid}] #{result['title']}"
-      result
+      package_image = download_image uri
     end
 
     def download_image(uri)
@@ -134,7 +162,21 @@ private
     end
 
     def get(query)
-      @agent.get DMM_URI_BASE+query
+      uri = DMM_URI_BASE+query
+      retry_count = 0
+      begin
+        result = @agent.get uri
+        raise "Error result" if result.uri.to_s=~%r(/error/)
+        return result
+      rescue => e
+        if retry_count < RETRY_MAX
+          retry_count += 1
+          @log.warn "Retry(#{retry_count}): #{uri}"
+          retry
+        else
+          raise e
+        end
+      end
     end
   end
 end

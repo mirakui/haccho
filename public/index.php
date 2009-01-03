@@ -1,12 +1,21 @@
 <?php
 define('MOVIES_PER_PAGE', 20);
-$movies = syck_load(file_get_contents('cache/downloaded.yml'));
+$pit = syck_load(file_get_contents('../secure/default.yml'));
+$pit = $pit['haccho_mysql'];
+$dsn = 'mysql:host=localhost;port=3306;dbname=haccho';
+$db = new PDO($dsn, $pit['username'], $pit['password']);
+
 $page = $_GET['page'];
 $page_count = ceil(count($movies) / MOVIES_PER_PAGE);
 if (!($page>=1 && $page<=$page_count)) {
   $page = 1;
 }
 $movies_page_index = ($page-1) * MOVIES_PER_PAGE;
+
+$st     = $db->prepare('SELECT * FROM entries LIMIT '.$movies_page_index.', '.MOVIES_PER_PAGE);
+$res    = $st->execute();
+$movies = $st->fetchAll();
+
 ?>
 <html>
 <head>
@@ -22,21 +31,27 @@ h2 {font-size:10pt; display:inline;}
 <h1>haccho</h1>
 <div class="section">
 <? for ($i=0; $i<MOVIES_PER_PAGE && ($i+$movies_page_index)<count($movies); $i++) { ?>
-  <? $m = $movies[$i + $movies_page_index] ?>
+  <?
+    $m = $movies[$i + $movies_page_index];
+    $cid = $m['cid'];
+    $pre = substr($cid, 0, 1);
+    $package_image = "cache/$pre/$cid.jpg";
+    $thumb_images  = glob("cache/$pre/$cid-*.jpg");
+    $uri = "http://www.dmm.co.jp/rental/-/detail/=/cid=$cid/";
+  ?>
   <div class="hentry">
     <div class="entry-title">
       <h2><?= $m['title'] ?></h2>
-      <? $keywords = join($m['keywords'], ', ') ?>
-      <p class="keywords"><?= $keywords ?></p>
+      <p class="keywords"><?= $m['keywords'] ?></p>
     </div>
     <div class="entry-content">
       <div class="image-box">
-        <a href="<?= $m['uri'] ?>" rel="bookmark"><img src="cache/<?= $m['package_image'] ?>"/></a>
+        <a href="<?= $uri ?>" rel="bookmark"><img src="<?= $package_image ?>"/></a>
       </div>
-      <? if ($m['thumb_images']) { ?>
+      <? if ($thumb_images) { ?>
         <div class="thumb-box">
-        <? foreach ($m['thumb_images'] as $th) { ?>
-          <img src="cache/<?= $th ?>"/>
+        <? foreach ($thumb_images as $th) { ?>
+          <img src="<?= $th ?>"/>
         <? } ?>
         </div>
       <? } ?>

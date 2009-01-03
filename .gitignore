@@ -1,4 +1,6 @@
 tmp
 log
 cache
+test
+secure
 *.swp

@@ -1,0 +1,16 @@
+DROP TABLE IF EXISTS entries;
+CREATE TABLE entries (
+  cid          VARCHAR(32)   NOT NULL,
+  title        VARCHAR(128)  NOT NULL,
+  uri          VARCHAR(256)  NOT NULL,
+  description  VARCHAR(1024) NOT NULL,
+  keywords     VARCHAR(256)  NOT NULL,
+  available_at VARCHAR(16)   NOT NULL,
+  playtime     VARCHAR(32)   NOT NULL,
+  actress      VARCHAR(128)  NOT NULL,
+  series       VARCHAR(128)  NOT NULL,
+  maker        VARCHAR(128)  NOT NULL,
+  label        VARCHAR(128)  NOT NULL,
+  PRIMARY KEY(cid)
+)ENGINE=MyISAM;
+

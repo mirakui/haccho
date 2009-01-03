@@ -113,7 +113,7 @@ private
         result['label']         = extract_label page
         @log.info "Crawled: [#{cid}] #{result['title']}"
       rescue => e
-        @log.warn "Skipped: [#{cid}] exception raised: "+ e.message + ' : ' + e.backtrace.join("\n")
+        @log.warn "Skipped: [#{cid}] exception raised: "+ e.message
       end
       result
     end

@@ -128,8 +128,7 @@ private
         if a['href']=~/keyword/
           keyword = a.text
           if @blacklist.include? keyword
-            @log.info "Blacklisted(#{keyword}): [#{cid}] #{result['title']}"
-            return nil
+            raise "Blacklisted(#{keyword})"
           else
             keywords << keyword
           end

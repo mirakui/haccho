@@ -105,6 +105,12 @@ private
         result['thumb_images']  = extract_thumb_images page
         result['description']   = extract_description page
         result['package_image'] = extract_package_image page, cid
+        result['available_at']  = extract_available_at page
+        result['playtime']      = extract_playtime page
+        result['actress']       = extract_actress page
+        result['series']        = extract_series page
+        result['maker']         = extract_maker page
+        result['label']         = extract_label page
         @log.info "Crawled: [#{cid}] #{result['title']}"
       rescue => e
         @log.warn "Skipped: [#{cid}] exception raised: "+ e.message + ' : ' + e.backtrace.join("\n")
@@ -152,6 +158,30 @@ private
     def extract_package_image(page, cid)
       uri = "http://pics.dmm.co.jp/mono/movie/#{cid}/#{cid}pl.jpg"
       package_image = download_image uri
+    end
+
+    def extract_available_at(page)
+      (page / 'table.mg-b20 td')[1].text
+    end
+
+    def extract_playtime(page)
+      (page / 'table.mg-b20 td')[3].text
+    end
+
+    def extract_actress(page)
+      (page / 'table.mg-b20 td')[5].text
+    end
+
+    def extract_series(page)
+      (page / 'table.mg-b20 td')[7].text
+    end
+
+    def extract_maker(page)
+      (page / 'table.mg-b20 td')[9].text
+    end
+
+    def extract_label(page)
+      (page / 'table.mg-b20 td')[11].text
     end
 
     def download_image(uri)

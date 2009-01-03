@@ -34,7 +34,7 @@ h2 {font-size:10pt; display:inline;}
   <?
     $m = $movies[$i + $movies_page_index];
     $cid = $m['cid'];
-    $pre = substr($cid, 0, 1);
+    $pre = substr($cid, 0, 3);
     $package_image = "cache/$pre/$cid.jpg";
     $thumb_images  = glob("cache/$pre/$cid-*.jpg");
     $uri = "http://www.dmm.co.jp/rental/-/detail/=/cid=$cid/";

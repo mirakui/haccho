@@ -196,7 +196,7 @@ private
     end
 
     def image_dir(name)
-      dir_path = File.join CACHE_DIR, name[0,1]
+      dir_path = File.join CACHE_DIR, name[0,3]
       Dir.mkdir dir_path unless File.exist?(dir_path)
       dir_path
     end

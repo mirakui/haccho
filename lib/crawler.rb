@@ -8,8 +8,8 @@ require 'mysql'
 require 'db'
 
 module Haccho
-  DL_COUNT_MAX     = $DEBUG ? 50 : 100_000
-  PAGE_COUNT_MAX   = $DEBUG ? 1  :   3_000
+  DL_COUNT_MAX     = $DEBUG ? 50 : 1_000_000
+  PAGE_COUNT_MAX   = $DEBUG ? 1  :     3_000
   RETRY_MAX        = 3
   DMM_URI_BASE     = 'http://www.dmm.co.jp/rental/-/'
   BASE_DIR         = File.join File.dirname(__FILE__), '../'
@@ -32,6 +32,7 @@ module Haccho
       @last_cid_wrote = false
       @rolled         = false
       @db             = DB.new
+      @crawled_count  = 0
     end
 
     def logger=(logger)
@@ -70,11 +71,11 @@ private
 
     def crawl_cids(cids)
       cids.each do |cid|
-        @log.info "Next cid(#{@crawled.length}): [#{cid}]"
+        @log.info "Next cid(#{@crawled_count}): [#{cid}]"
         if cid && @last_cid==cid
           @log.info "Stopped: reached last cid (#{@last_cid})"
           return nil
-        elsif @crawled.length>=DL_COUNT_MAX
+        elsif @crawled_count>=DL_COUNT_MAX
           @log.info "Stopped: reached download count max (#{DL_COUNT_MAX})"
           return nil
         end
@@ -82,6 +83,7 @@ private
         if crawled
           #@crawled << crawled
           @db.store(crawled)
+          @crawled_count += 1
           @last_cid_file.write(cid) unless @last_cid_wrote
           @last_cid_wrote = true
         end

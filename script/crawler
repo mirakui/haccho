@@ -15,7 +15,7 @@ begin
   crawler = Haccho::Crawler.new
   crawler.logger = logger
   crawler.start
-rescue => e
+rescue Object => e
   logger.error e.message + ' : ' + e.backtrace.join("\n")
 end
 

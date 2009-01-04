@@ -10,6 +10,8 @@ require 'db'
 module Haccho
   DL_COUNT_MAX     = $DEBUG ? 50 : 1_000_000
   PAGE_COUNT_MAX   = $DEBUG ? 1  :     3_000
+  READ_TIMEOUT     = 30
+  OPEN_TIMEOUT     = 30
   RETRY_MAX        = 3
   DMM_URI_BASE     = 'http://www.dmm.co.jp/rental/-/'
   BASE_DIR         = File.join File.dirname(__FILE__), '../'
@@ -21,6 +23,8 @@ module Haccho
   class Crawler
     def initialize
       @agent          = WWW::Mechanize.new
+      @agent.read_timeout = READ_TIMEOUT
+      @agent.open_timeout = OPEN_TIMEOUT
       #WWW::Mechanize.html_parser = Hpricot
       @log            = Logger.new STDOUT
       @log.level      = Logger::DEBUG
@@ -110,7 +114,7 @@ private
         result['maker']         = extract_maker page
         result['label']         = extract_label page
         @log.info "Crawled: [#{cid}] #{result['title']}"
-      rescue => e
+      rescue Object => e
         @log.warn "Skipped: [#{cid}] exception raised: "+ e.message
         result = nil
       end

@@ -5,7 +5,7 @@ require 'hpricot'
 require 'kconv'
 require 'gena/file_db'
 require 'mysql'
-require 'db'
+require 'lib/db'
 
 module Haccho
   DL_COUNT_MAX     = $DEBUG ? 50 : 1_000_000
@@ -19,6 +19,7 @@ module Haccho
   CONFIG_DIR       = File.join BASE_DIR,   'config'
   CONFIG_YAML_PATH = File.join CONFIG_DIR, 'config.yml'
   LAST_CID_PATH    = File.join CACHE_DIR,  'last_cid'
+  LAST_PAGE_PATH   = File.join CACHE_DIR,  'last_page'
 
   class Crawler
     def initialize
@@ -34,6 +35,7 @@ module Haccho
       @last_cid_file  = Gena::FileDB.new LAST_CID_PATH
       @last_cid       = @last_cid_file.read
       @last_cid_wrote = false
+      @last_page_file = Gena::FileDB.new LAST_PAGE_PATH
       @rolled         = false
       @db             = DB.new
       @crawled_count  = 0
@@ -43,10 +45,17 @@ module Haccho
       @log = logger
     end
 
-    def start
+    def start(start_page_num=1)
       @log.info 'Crawler started'
       @crawled = []
-      num = 1
+      # ページ番号の指定があったら last_cid は気にしない
+      @last_cid_wrote = true if start_page_num > 1
+      num = start_page_num
+      get 'list/=/sort=date/' # dummy
+
+      @last_page_file.delete if @last_page_file.exist?
+
+      @log.info "Dummy page loaded"
       loop do
         if num > PAGE_COUNT_MAX
           @log.info "Stopped: reached page count max (#{PAGE_COUNT_MAX})"
@@ -54,6 +63,7 @@ module Haccho
         end
         cids = crawl_list(num)
         crawl_cids(cids) or break
+        @last_page_file.write(num.to_s)
         num += 1
       end
 
@@ -64,7 +74,7 @@ private
 
     def crawl_list(num=1)
       @log.info "Crawl list page(#{num})"
-      page = get num<=1 ? 'list/=/sort=date/' : "list/=/page=#{num}/"
+      page = get "list/=/page=#{num}/"
       cids = page.links_with(:href => %r</cid=.+/$>).map {|link|
         link.href.match(%r</cid=(.+)/$>)[1]
       }
@@ -214,7 +224,7 @@ private
         result = @agent.get uri
         raise "Error result" if result.uri.to_s=~%r(/error/)
         return result
-      rescue => e
+      rescue Object => e
         if retry_count < RETRY_MAX
           retry_count += 1
           @log.warn "Retry(#{retry_count}): #{uri}"

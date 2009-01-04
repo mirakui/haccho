@@ -1,7 +1,9 @@
 #!/usr/bin/ruby -Ku
 
-BASE_PATH = File.join File.dirname(__FILE__), '../'
+BASE_PATH = File.join File.dirname(__FILE__), '..'
 LOG_PATH  = File.join BASE_PATH, 'log/crawler.log'
+$: << BASE_PATH
+$KCODE = 'u'
 
 require 'lib/crawler'
 
@@ -11,10 +13,12 @@ else
   logger = Logger.new LOG_PATH, 'daily'
 end
 
+start_page_num = ARGV.shift.to_i || 1
+
 begin
   crawler = Haccho::Crawler.new
   crawler.logger = logger
-  crawler.start
+  crawler.start start_page_num
 rescue Object => e
   logger.error e.message + ' : ' + e.backtrace.join("\n")
 end

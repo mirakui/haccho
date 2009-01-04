@@ -221,9 +221,11 @@ private
       uri = DMM_URI_BASE+query
       retry_count = 0
       begin
-        result = @agent.get uri
-        raise "Error result" if result.uri.to_s=~%r(/error/)
-        return result
+        timeout(OPEN_TIMEOUT) do
+          result = @agent.get uri
+          raise "Error result" if result.uri.to_s=~%r(/error/)
+          return result
+        end
       rescue Object => e
         if retry_count < RETRY_MAX
           retry_count += 1

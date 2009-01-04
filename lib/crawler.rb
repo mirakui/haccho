@@ -24,8 +24,8 @@ module Haccho
   class Crawler
     def initialize
       @agent          = WWW::Mechanize.new
-      @agent.read_timeout = READ_TIMEOUT
-      @agent.open_timeout = OPEN_TIMEOUT
+      #@agent.read_timeout = READ_TIMEOUT
+      #@agent.open_timeout = OPEN_TIMEOUT
       #WWW::Mechanize.html_parser = Hpricot
       @log            = Logger.new STDOUT
       @log.level      = Logger::DEBUG
@@ -51,7 +51,7 @@ module Haccho
       # ページ番号の指定があったら last_cid は気にしない
       @last_cid_wrote = true if start_page_num > 1
       num = start_page_num
-      get 'list/=/sort=date/' # dummy
+      get DMM_URI_BASE+'list/=/sort=date/' # dummy
 
       @last_page_file.delete if @last_page_file.exist?
 
@@ -74,7 +74,7 @@ private
 
     def crawl_list(num=1)
       @log.info "Crawl list page(#{num})"
-      page = get "list/=/page=#{num}/"
+      page = get DMM_URI_BASE+"list/=/page=#{num}/"
       cids = page.links_with(:href => %r</cid=.+/$>).map {|link|
         link.href.match(%r</cid=(.+)/$>)[1]
       }
@@ -109,7 +109,7 @@ private
       result = nil
       begin
         result = {}
-        page = get "detail/=/cid=#{cid}/"
+        page = get DMM_URI_BASE+"detail/=/cid=#{cid}/"
         result['cid']           = cid
         result['uri']           = page.uri.to_s
         result['title']         = extract_title page
@@ -200,7 +200,7 @@ private
     end
 
     def download_image(uri, name)
-      file = @agent.get uri
+      file = get uri
       file_path =  File.join(image_dir(name), name)
       if File.exist?(file_path)
         @log.info "Already exists: #{uri}"
@@ -218,7 +218,7 @@ private
     end
 
     def get(query)
-      uri = DMM_URI_BASE+query
+      uri = query
       retry_count = 0
       begin
         timeout(OPEN_TIMEOUT) do
